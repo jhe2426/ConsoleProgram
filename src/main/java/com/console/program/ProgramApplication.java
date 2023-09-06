@@ -6,13 +6,16 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import com.console.program.dto.requestDto.GetParticularDateProductPriceRequestDto;
 import com.console.program.dto.requestDto.PatchPriceProductRequestDto;
 import com.console.program.dto.requestDto.PostProductRequestDto;
+import com.console.program.dto.responseDto.GetParticularDateProductPriceResponseDto;
 import com.console.program.dto.responseDto.GetProductListResponseDto;
 import com.console.program.dto.responseDto.GetProductPriceRecordResponseDto;
 import com.console.program.dto.responseDto.GetProductResponseDto;
@@ -282,9 +285,107 @@ public class ProgramApplication {
 							}
 						}
 
-						
 
-						if(subInputNumber == 3) {}
+
+						if(subInputNumber == 3) {
+							try {
+								
+								String getProductList = "http://localhost:4000/api/v1/product/list";
+
+								HttpClient client = HttpClient.newHttpClient();
+								HttpRequest request = HttpRequest.newBuilder()
+									.uri(URI.create(getProductList))
+									.header("Authorization", token)
+									.GET()
+									.build();
+
+								HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+								String responseJson = response.body(); 
+								
+								Gson gson = new Gson();
+
+								GetProductListResponseDto getProductListResponseDto = gson.fromJson(responseJson, GetProductListResponseDto.class);
+
+								List<Product> productList = getProductListResponseDto.getProductList();
+
+								for(Product product: productList) {
+									System.out.println(product);
+								}
+								System.out.println("-------------------------------------------------------------------------------");
+								
+
+								System.out.print("상품 목록 중에서 특정 시점 상품 가격을 조회할 상품 번호(productNumber)를 입력해주세요: ");
+								int inputProductNumber = scanner.nextInt();
+
+
+
+								String getProductPriceRecordList = "http://localhost:4000/api/v1/product/price-record/" + inputProductNumber;
+								
+								HttpClient client2 = HttpClient.newHttpClient();
+								HttpRequest request2 = HttpRequest.newBuilder()
+									.uri(URI.create(getProductPriceRecordList))
+									.header("Authorization", token)
+									.header("content-type", type)
+									.GET()
+									.build();
+
+								HttpResponse<String> response2 = client2.send(request2, HttpResponse.BodyHandlers.ofString());
+								String responseJson2 = response2.body(); 
+								
+								Gson gson2 = new Gson();
+
+								GetProductPriceRecordResponseDto getProductPriceRecordResponseDto = gson2.fromJson(responseJson2, GetProductPriceRecordResponseDto.class); 
+
+								List<ProductPriceRecordSummary> priceRecordSummaryList = getProductPriceRecordResponseDto.getProductPriceRecordList();
+
+								Collections.sort(priceRecordSummaryList);
+
+								for(int index = 0; index < priceRecordSummaryList.size(); index++) {
+									ProductPriceRecordSummary productPriceRecordSummary = priceRecordSummaryList.get(index);
+									String modifyDate = productPriceRecordSummary.getModifyDate();
+
+									System.out.println((index + 1) + "번 " + " 수정 날짜: " + modifyDate);
+								}
+
+								System.out.print("상품 수정 이력 목록 중에서 조회하고 싶은 날짜의 번호를 입력해주세요: ");
+								int inputModifyDateNumber = scanner.nextInt();
+								
+								String inputModifyDate = priceRecordSummaryList.get(inputModifyDateNumber-1).getModifyDate();
+								
+								
+								String getParticularDateProductPrice = "http://localhost:4000/api/v1/product/price";
+
+								GetParticularDateProductPriceRequestDto requestDto = new GetParticularDateProductPriceRequestDto(inputModifyDate, inputProductNumber);
+
+								ObjectMapper objectMapper = new ObjectMapper();
+
+									String requestBody = objectMapper
+										.writerWithDefaultPrettyPrinter()
+										.writeValueAsString(requestDto);
+
+								HttpClient client3 = HttpClient.newHttpClient();
+								HttpRequest request3 = HttpRequest.newBuilder()
+									.uri(URI.create(getParticularDateProductPrice))
+									.method("GET", BodyPublishers.ofString(requestBody))
+									.header("Authorization", token)
+									.header("content-type", type)
+									.build();
+
+								HttpResponse<String> response3 = client3.send(request3, HttpResponse.BodyHandlers.ofString());
+								String responseJson3 = response3.body(); 
+
+								System.out.println(responseJson3);
+
+								Gson gson3 = new Gson();
+
+								GetParticularDateProductPriceResponseDto getParticularDateProductPriceResponseDto  = gson3.fromJson(responseJson3, GetParticularDateProductPriceResponseDto.class); 
+
+								System.out.println(getParticularDateProductPriceResponseDto.getPrice() + "원");
+
+							} catch (Exception exception) {
+								exception.printStackTrace();
+							}
+						}
 
 						if(subInputNumber == 4) {}
 
@@ -305,6 +406,7 @@ public class ProgramApplication {
 					System.out.println("2. 쿠폰을 적용하여 상품 주문");
 					System.out.println("3. 권한 발급 받기로 돌아가기");
 					System.out.println("4. 프로그램 종료");
+					System.out.print("번호를 입력해주세요: ");
 					int subInputNumber = scanner.nextInt();
 					System.out.println("-------------------------------------------------------------------------------");
 
