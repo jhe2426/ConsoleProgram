@@ -387,7 +387,81 @@ public class ProgramApplication {
 							}
 						}
 
-						if(subInputNumber == 4) {}
+						if(subInputNumber == 4) {
+
+							try {
+								String getProductList = "http://localhost:4000/api/v1/product/list";
+
+								HttpClient client = HttpClient.newHttpClient();
+								HttpRequest request = HttpRequest.newBuilder()
+									.uri(URI.create(getProductList))
+									.header("Authorization", token)
+									.GET()
+									.build();
+
+								HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+								String responseJson = response.body(); 
+								
+								Gson gson = new Gson();
+
+								GetProductListResponseDto getProductListResponseDto = gson.fromJson(responseJson, GetProductListResponseDto.class);
+
+								List<Product> productList = getProductListResponseDto.getProductList();
+
+								for(Product product: productList) {
+									System.out.println(product);
+								}
+								System.out.println("-------------------------------------------------------------------------------");
+								
+
+								System.out.print("상품 목록 중에서 삭제할 상품 번호(productNumber)를 입력해주세요: ");
+								int inputProductNumber = scanner.nextInt();
+								System.out.println("-------------------------------------------------------------------------------");
+
+
+								String deleteProduct = "http://localhost:4000/api/v1/product/"+inputProductNumber;
+
+
+								HttpClient client2 = HttpClient.newHttpClient();
+								HttpRequest request2 = HttpRequest.newBuilder()
+									.uri(URI.create(deleteProduct))
+									.header("Authorization", token)
+									.DELETE()
+									.build();
+
+								HttpResponse<String> response2 = client2.send(request2, HttpResponse.BodyHandlers.ofString());
+								String responseJson2 = response2.body(); 
+
+								System.out.println(responseJson2);
+
+
+								HttpClient client3 = HttpClient.newHttpClient();
+								HttpRequest request3 = HttpRequest.newBuilder()
+									.uri(URI.create(getProductList))
+									.header("Authorization", token)
+									.GET()
+									.build();
+
+								HttpResponse<String> response3 = client3.send(request3, HttpResponse.BodyHandlers.ofString());
+								String responseJson3 = response3.body(); 
+								
+								Gson gson3 = new Gson();
+
+								GetProductListResponseDto getProductListResponseDto2 = gson3.fromJson(responseJson3, GetProductListResponseDto.class);
+
+								List<Product> productList2 = getProductListResponseDto2.getProductList();
+
+								for(Product product: productList2) {
+									System.out.println(product);
+								}
+								System.out.println("-------------------------------------------------------------------------------");
+
+
+							} catch (Exception exception) {
+								exception.printStackTrace();
+							}
+
+						}
 
 						if(subInputNumber == 5) break;
 
