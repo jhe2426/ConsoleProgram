@@ -1,11 +1,11 @@
-package com.console.program.responseDto;
+package com.console.program.dto.responseDto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class GetMartTokenResponseDto{
+public class GetTokenResponseDto{
     private String token;
     private int expirationDate;
 }

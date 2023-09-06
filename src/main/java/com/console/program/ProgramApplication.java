@@ -3,12 +3,18 @@ package com.console.program;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
+import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
+import java.util.List;
 import java.util.Scanner;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import com.console.program.responseDto.GetMartTokenResponseDto;
+import com.console.program.dto.requestDto.PostProductRequestDto;
+import com.console.program.dto.responseDto.GetProductListResponseDto;
+import com.console.program.dto.responseDto.GetTokenResponseDto;
+import com.console.program.dto.responseDto.Product;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 
 @SpringBootApplication
@@ -16,7 +22,8 @@ public class ProgramApplication {
 
 	public static void main(String[] args) {
 		Scanner scanner = new Scanner(System.in);
-		final String GET_MART_ROLE_TOKEN_URL = "http://localhost:4000/api/v1/auth/mart";
+		String type = "application/json";
+		
 		
 		while(true) {
             System.out.println("1. 마트 권한 발급 받기");
@@ -28,27 +35,31 @@ public class ProgramApplication {
 
 
             if(inputNumber == 1) {
-				GetMartTokenResponseDto getMartTokenResponseDto;
+				GetTokenResponseDto getMartTokenResponseDto;
+				String token = null;
 				try {
 
+					String getMartRoleTokenUrl = "http://localhost:4000/api/v1/auth/mart";
+					
 					HttpClient client = HttpClient.newHttpClient();
 					HttpRequest request = HttpRequest.newBuilder()
-					.uri(URI.create(GET_MART_ROLE_TOKEN_URL))
-					.GET()
-					.build();
+						.uri(URI.create(getMartRoleTokenUrl))
+						.GET()
+						.build();
 
 					HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 					String json = response.body(); 
 
 					Gson gson = new Gson();
 
-					getMartTokenResponseDto = gson.fromJson(json, GetMartTokenResponseDto.class);
+					getMartTokenResponseDto = gson.fromJson(json, GetTokenResponseDto.class);
+
+					token = "Bearer " + getMartTokenResponseDto.getToken();
 					
 					
 				} catch (Exception exception) {
 					System.err.println(exception.toString());
         		}
-
 
 
                 System.out.println("1. 상품 생성");
@@ -62,7 +73,63 @@ public class ProgramApplication {
                 System.out.println("---------------------------------------------");
 
 
-                if(subInputNumber == 1) {}
+                if(subInputNumber == 1) {
+					try {
+
+						String postProduct = "http://localhost:4000/api/v1/product";
+
+						ObjectMapper objectMapper = new ObjectMapper();
+
+						PostProductRequestDto dto = new PostProductRequestDto("감자", 10000, 0);
+						String requestBody = objectMapper
+							.writerWithDefaultPrettyPrinter()
+							.writeValueAsString(dto);
+
+
+
+						HttpClient client = HttpClient.newHttpClient();
+						HttpRequest request = HttpRequest.newBuilder()
+						.uri(URI.create(postProduct))
+						.header("Authorization", token)
+						.header("content-type", type)
+						.POST(BodyPublishers.ofString(requestBody))
+						.build();
+
+						HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+						String json = response.body(); 
+						System.out.println(json);
+						
+					} catch (Exception exception) {
+						System.err.println(exception.toString());
+					}
+
+					try {
+						String getProductList = "http://localhost:4000/api/v1/product/list";
+
+						HttpClient client = HttpClient.newHttpClient();
+						HttpRequest request = HttpRequest.newBuilder()
+							.uri(URI.create(getProductList))
+							.header("Authorization", token)
+							.GET()
+							.build();
+
+						HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+						String json = response.body(); 
+						
+						Gson gson = new Gson();
+
+						GetProductListResponseDto getProductListResponseDto = gson.fromJson(json, GetProductListResponseDto.class);
+
+						List<Product> productList = getProductListResponseDto.getProductList();
+
+						for(Product product: productList) {
+							System.out.println(product);
+						}
+
+					} catch (Exception exception) {
+						System.err.println(exception.toString());
+					}
+				}
 
                 if(subInputNumber == 2) {}
 
