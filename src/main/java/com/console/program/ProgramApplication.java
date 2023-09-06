@@ -12,11 +12,16 @@ import java.util.Scanner;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import com.console.program.dto.requestDto.CouponApplicationOrdersInformation;
+import com.console.program.dto.requestDto.GetAvailableCouponListRequestDto;
 import com.console.program.dto.requestDto.GetParticularDateProductPriceRequestDto;
 import com.console.program.dto.requestDto.PatchPriceProductRequestDto;
+import com.console.program.dto.requestDto.PostCouponApplicationOrdersRequestDto;
 import com.console.program.dto.requestDto.PostProductOrdersRequestDto;
 import com.console.program.dto.requestDto.PostProductRequestDto;
 import com.console.program.dto.requestDto.ProductOrdersInformation;
+import com.console.program.dto.responseDto.CouponSummary;
+import com.console.program.dto.responseDto.GetAvailableCouponListResponseDto;
 import com.console.program.dto.responseDto.GetOrdersResponseDto;
 import com.console.program.dto.responseDto.GetParticularDateProductPriceResponseDto;
 import com.console.program.dto.responseDto.GetProductListResponseDto;
@@ -702,9 +707,6 @@ public class ProgramApplication {
 									System.out.println("ordersProductNumber = " + ordersProductNumber + " productNumber = " + productNumber + " productQuantity = " + productQuantity);
 								}
 								
-								
-								
-
 
 
 							} catch (Exception exception) {
@@ -712,7 +714,252 @@ public class ProgramApplication {
 						}
 					}
 
-					if(subInputNumber == 2) {}
+					if(subInputNumber == 2) {
+
+
+						try {
+							
+							Loop2: while(true) {
+									try {
+
+										Scanner stringScanner = new Scanner(System.in);
+
+										String getProductList = "http://localhost:4000/api/v1/product/list";
+
+										HttpClient client = HttpClient.newHttpClient();
+										HttpRequest request = HttpRequest.newBuilder()
+											.uri(URI.create(getProductList))
+											.header("Authorization", token)
+											.GET()
+											.build();
+
+										HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+										String responseJson = response.body(); 
+										
+										Gson gson = new Gson();
+
+										GetProductListResponseDto getProductListResponseDto = gson.fromJson(responseJson, GetProductListResponseDto.class);
+
+										List<Product> productList = getProductListResponseDto.getProductList();
+
+										for(Product product: productList) {
+											System.out.println(product);
+										}
+
+										System.out.println("-------------------------------------------------------------------------------");
+									
+										List<Integer> inputProductNumberList = new ArrayList<>();
+										List<Integer> inputProductQuantityList = new ArrayList<>();		
+
+										
+										System.out.print("상품 목록 중에서 주문할 상품 번호를 입력해주세요 (입력 예시: 2,3,4,5 ) : ");
+										String inputProductNumber = stringScanner.next();
+										String[] inputProductNumberArray = inputProductNumber.split(",");
+
+										for(int index = 0; index < inputProductNumberArray.length; index++) {
+											String stringProductNumber = inputProductNumberArray[index];
+											inputProductNumberList.add(Integer.parseInt(stringProductNumber));
+										}
+
+										
+										
+										System.out.println(inputProductNumber + " 입력하신 상품 번호입니다.");
+										System.out.print("위의 입력하신 상품 번호에 맞게 구매하실 상품의 개수를 입력해주세요. (입력 예시: 1,3,4) : ");
+										String inputProductQuantity = stringScanner.next();
+										System.out.println("-------------------------------------------------------------------------------");
+										String[] inputProductQuantityArray = inputProductQuantity.split(",");
+
+										for(int index = 0; index < inputProductQuantityArray.length; index++) {
+											String stringProductQuantity = inputProductQuantityArray[index];
+											inputProductQuantityList.add(Integer.parseInt(stringProductQuantity));
+										}
+
+										String postOrders = "http://localhost:4000/api/v1/orders";
+
+
+										if(!(inputProductNumberList.size() == inputProductQuantityList.size())) {
+											System.out.println("입력하신 상품 번호의 개수와 똑같은 개수로 상품 개수를 입력해주세요");
+											continue Loop2;
+										}
+
+										ObjectMapper objectMapper = new ObjectMapper();
+
+										List<ProductOrdersInformation> productOrdersInformationList = new ArrayList<>();
+
+										for(int index = 0; index < inputProductNumberList.size(); index++) {
+											int inputProdcutNumber = inputProductNumberList.get(index);
+											int inputProductQuantityNumber = inputProductQuantityList.get(index);
+											ProductOrdersInformation productOrdersInformation = new ProductOrdersInformation(inputProdcutNumber, inputProductQuantityNumber);
+											productOrdersInformationList.add(productOrdersInformation);
+										}
+
+										
+
+
+
+
+										String getAvailableCouponList = "http://localhost:4000/api/v1/orders/available-coupon/list";
+
+										GetAvailableCouponListRequestDto getAvailableCouponListRequestDto = new GetAvailableCouponListRequestDto(inputProductNumberList);
+						
+
+										
+
+											String requestBody = objectMapper
+												.writerWithDefaultPrettyPrinter()
+												.writeValueAsString(getAvailableCouponListRequestDto);
+
+										HttpClient client2 = HttpClient.newHttpClient();
+										HttpRequest request2 = HttpRequest.newBuilder()
+											.uri(URI.create(getAvailableCouponList))
+											.method("GET", BodyPublishers.ofString(requestBody))
+											.header("Authorization", token)
+											.header("content-type", type)
+											.build();
+
+										HttpResponse<String> response2 = client2.send(request2, HttpResponse.BodyHandlers.ofString());
+										String responseJson2 = response2.body(); 
+
+
+										Gson gson2 = new Gson();
+
+										GetAvailableCouponListResponseDto getAvailableCouponListResponseDto  = gson2.fromJson(responseJson2, GetAvailableCouponListResponseDto.class); 
+
+										List<CouponSummary> couponSummarieList = getAvailableCouponListResponseDto.getCouponList();
+
+
+										for(CouponSummary couponSummary: couponSummarieList) {
+											System.out.println(couponSummary.toString());
+										}
+
+										System.out.print("적용하실 쿠폰 번호(couponNumber) 한 개를 입력해주세요 (입력 예시: 1) : ");
+										int inputCouponNumber = scanner.nextInt();
+
+
+
+
+										String postCouponApplicationOrders = "http://localhost:4000/api/v1/orders/application-coupon";
+
+										List<CouponApplicationOrdersInformation> couponApplicationOrdersInformationList = new ArrayList<>();
+
+										for(int index = 0; index < inputProductNumberList.size(); index++) {
+											int inputProdcutNumber = inputProductNumberList.get(index);
+											int inputProductQuantityNumber = inputProductQuantityList.get(index);
+											CouponApplicationOrdersInformation couponApplicationOrdersInformation = new CouponApplicationOrdersInformation(inputProdcutNumber, inputProductQuantityNumber);
+											couponApplicationOrdersInformationList.add(couponApplicationOrdersInformation);
+										}
+
+										PostCouponApplicationOrdersRequestDto postCouponApplicationOrdersRequestDto = new PostCouponApplicationOrdersRequestDto(couponApplicationOrdersInformationList, inputCouponNumber);
+
+										String requestBody3 = objectMapper
+										 	.writerWithDefaultPrettyPrinter()
+										 	.writeValueAsString(postCouponApplicationOrdersRequestDto);
+							
+
+										HttpClient client3 = HttpClient.newHttpClient();
+										HttpRequest request3 = HttpRequest.newBuilder()
+											.uri(URI.create(postCouponApplicationOrders))
+											.header("Authorization", token)
+											.header("content-type", type)
+											.POST(BodyPublishers.ofString(requestBody3))
+											.build();
+
+										HttpResponse<String> response3 = client3.send(request3, HttpResponse.BodyHandlers.ofString());
+										String responseJson3 = response3.body(); 
+										
+										Gson gson3 = new Gson();
+
+										ResponseDto responseDto3 = gson3.fromJson(responseJson3, ResponseDto.class);
+
+										String code = responseDto3.getCode();
+
+										if(code.equals("NEPN")) {
+											System.out.println("존재하지 않는 상품 번호입니다.");
+											continue Loop2;
+										}
+
+										System.out.println(responseJson3);
+
+
+										break;
+									} catch (Exception e) {
+										e.printStackTrace();
+										System.err.println("주문할 상품 번호를 1,2,3 이런 형식으로 작성해주시길 바랍니다");
+										continue Loop2;
+									}
+
+								}
+
+
+								String getRecentOrdersNumber = "http://localhost:4000/api/v1/orders/recent-orders-number";
+
+								HttpClient client = HttpClient.newHttpClient();
+								HttpRequest request = HttpRequest.newBuilder()
+									.uri(URI.create(getRecentOrdersNumber))
+									.header("Authorization", token)
+									.GET()
+									.build();
+
+								HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+								String responseJson = response.body(); 
+								
+								Gson gson = new Gson();
+
+								GetRecentOrdersNumberResponseDto getRecentOrdersNumberResponseDto = gson.fromJson(responseJson, GetRecentOrdersNumberResponseDto.class);
+
+										
+								int recentOrdersNubmer = getRecentOrdersNumberResponseDto.getRecentOrdersNumber();
+
+
+
+
+
+								String getOrders = "http://localhost:4000/api/v1/orders/" + recentOrdersNubmer;
+
+								HttpClient client2 = HttpClient.newHttpClient();
+								HttpRequest request2 = HttpRequest.newBuilder()
+									.uri(URI.create(getOrders))
+									.header("Authorization", token)
+									.GET()
+									.build();
+
+								HttpResponse<String> response2 = client2.send(request2, HttpResponse.BodyHandlers.ofString());
+								String responseJson2 = response2.body(); 
+								
+								Gson gson2 = new Gson();
+
+								GetOrdersResponseDto getOrdersResponseDto = gson2.fromJson(responseJson2, GetOrdersResponseDto.class);
+
+								System.out.print("ordersNumber = " + getOrdersResponseDto.getOrdersNumber());
+								System.out.print(" userNumber = " + getOrdersResponseDto.getUserNumber());
+								System.out.print(" totalOrderCount = " + getOrdersResponseDto.getTotalOrderCount());
+								System.out.print(" orderPrice = " + getOrdersResponseDto.getOrderPrice());
+								System.out.print(" couponPkNumber = " + getOrdersResponseDto.getCouponPkNumber());
+								System.out.println(" deliveryCharge = " +  getOrdersResponseDto.getDeliveryCharge());
+								System.out.println(" ordersProdcutList = ");
+
+								List<OrdersProduct> ordersProductList = getOrdersResponseDto.getOrdersProdcutList();
+
+								for(OrdersProduct ordersProduct: ordersProductList){
+									int ordersProductNumber = ordersProduct.getOrdersProductNumber();
+									int productNumber = ordersProduct.getProductNumber();
+									int productQuantity = ordersProduct.getProductQuantity();
+									System.out.println("ordersProductNumber = " + ordersProductNumber + " productNumber = " + productNumber + " productQuantity = " + productQuantity);
+								}
+
+
+
+								
+
+
+						} catch (Exception exception) {
+							exception.printStackTrace();
+						}
+
+
+						
+
+					}
 
 					if(subInputNumber == 3) break;
 
