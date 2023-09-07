@@ -5,7 +5,7 @@ import java.util.List;
 import lombok.Data;
 
 @Data
-public class GetProductListResponseDto {
+public class GetProductListResponseDto extends ResponseDto{
        private List<Product> productList;
 }
 
