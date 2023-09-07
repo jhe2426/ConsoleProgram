@@ -110,7 +110,7 @@ public class ProgramApplication {
 								PostProductRequestDto optionTwo = new PostProductRequestDto("배추", 38000, 0);
 								productRequestDtoList.add(optionTwo);
 								
-								PostProductRequestDto optionThree = new PostProductRequestDto("감", 23000, 30000);
+								PostProductRequestDto optionThree = new PostProductRequestDto("감", 23000, 3000);
 								productRequestDtoList.add(optionThree);
 							
 
