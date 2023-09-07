@@ -5,6 +5,6 @@ import java.util.List;
 import lombok.Data;
 
 @Data
-public class GetAvailableCouponListResponseDto {
+public class GetAvailableCouponListResponseDto extends ResponseDto {
    private List<CouponSummary> couponList;
 }

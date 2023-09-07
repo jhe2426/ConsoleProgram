@@ -612,6 +612,7 @@ public class ProgramApplication {
 
 										if(!(inputProductNumberList.size() == inputProductQuantityList.size())) {
 											System.out.println("입력하신 상품 번호의 개수와 똑같은 개수로 상품 개수를 입력해주세요");
+											System.out.println("-------------------------------------------------------------------------------");
 											continue Loop2;
 										}
 
@@ -662,7 +663,7 @@ public class ProgramApplication {
 										break;
 									} catch (Exception e) {
 										e.printStackTrace();
-										System.err.println("주문할 상품 번호를 1,2,3 이런 형식으로 작성해주시길 바랍니다");
+										System.err.println("주문할 상품 번호를 1,2,3 이런 형식으로 작성해주시길 바랍니다.");
 										continue Loop2;
 									}
 
@@ -786,12 +787,17 @@ public class ProgramApplication {
 										System.out.print("위의 입력하신 상품 번호에 맞게 구매하실 상품의 개수를 입력해주세요. (입력 예시: 1,3,4) : ");
 										String inputProductQuantity = stringScanner.next();
 										System.out.println("-------------------------------------------------------------------------------");
+
 										String[] inputProductQuantityArray = inputProductQuantity.split(",");
 
 										for(int index = 0; index < inputProductQuantityArray.length; index++) {
 											String stringProductQuantity = inputProductQuantityArray[index];
 											inputProductQuantityList.add(Integer.parseInt(stringProductQuantity));
 										}
+										
+										
+
+										
 
 										String postOrders = "http://localhost:4000/api/v1/orders";
 
@@ -824,9 +830,9 @@ public class ProgramApplication {
 
 										
 
-											String requestBody = objectMapper
-												.writerWithDefaultPrettyPrinter()
-												.writeValueAsString(getAvailableCouponListRequestDto);
+										String requestBody = objectMapper
+											.writerWithDefaultPrettyPrinter()
+											.writeValueAsString(getAvailableCouponListRequestDto);
 
 										HttpClient client2 = HttpClient.newHttpClient();
 										HttpRequest request2 = HttpRequest.newBuilder()
@@ -842,17 +848,40 @@ public class ProgramApplication {
 
 										Gson gson2 = new Gson();
 
-										GetAvailableCouponListResponseDto getAvailableCouponListResponseDto  = gson2.fromJson(responseJson2, GetAvailableCouponListResponseDto.class); 
+										GetAvailableCouponListResponseDto getAvailableCouponListResponseDto2  = gson2.fromJson(responseJson2, GetAvailableCouponListResponseDto.class); 
 
-										List<CouponSummary> couponSummarieList = getAvailableCouponListResponseDto.getCouponList();
+										String code = getAvailableCouponListResponseDto2.getCode();
+
+										if(code.equals("NEPN")) {
+											System.out.println("존재하지 않는 상품 번호를 입력하셨습니다.");
+											System.out.println("존재하는 상품 번호를 정확하게 입력해주시길 바랍니다.");
+											System.out.println("-------------------------------------------------------------------------------");
+											continue;
+										}
+										System.out.println(code);
+
+										if(code.equals("NECN")) {
+											System.out.println("존재하지 않는 쿠폰 번호입니다.");
+											System.out.println("-------------------------------------------------------------------------------");
+											continue;
+										}
+
+										if(code.equals("NEUC")) {
+											System.out.println("사용자가 사용할 수 있는 쿠폰이 존재하지 않습니다.");
+											System.out.println("-------------------------------------------------------------------------------");
+											continue;
+										}
+
+										List<CouponSummary> couponSummarieList = getAvailableCouponListResponseDto2.getCouponList();
 
 
 										for(CouponSummary couponSummary: couponSummarieList) {
 											System.out.println(couponSummary.toString());
 										}
 
+										int inputCouponNumber = 0;
 										System.out.print("적용하실 쿠폰 번호(couponNumber) 한 개를 입력해주세요 (입력 예시: 1) : ");
-										int inputCouponNumber = scanner.nextInt();
+										inputCouponNumber = scanner.nextInt();
 
 
 
@@ -890,10 +919,13 @@ public class ProgramApplication {
 
 										ResponseDto responseDto3 = gson3.fromJson(responseJson3, ResponseDto.class);
 
-										String code = responseDto3.getCode();
+										String code2 = responseDto3.getCode();
+
+										System.out.println(code2);
 
 										if(code.equals("NEPN")) {
 											System.out.println("존재하지 않는 상품 번호입니다.");
+											System.out.println("-------------------------------------------------------------------------------");
 											continue Loop2;
 										}
 
@@ -902,8 +934,8 @@ public class ProgramApplication {
 
 										break;
 									} catch (Exception e) {
-										e.printStackTrace();
-										System.err.println("주문할 상품 번호를 1,2,3 이런 형식으로 작성해주시길 바랍니다");
+										System.err.println("주문할 상품 번호를 1,2,3 이런 형식으로 작성해주시길 바랍니다.");
+										System.out.println("-------------------------------------------------------------------------------");
 										continue Loop2;
 									}
 
