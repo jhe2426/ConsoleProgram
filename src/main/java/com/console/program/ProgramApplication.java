@@ -858,7 +858,6 @@ public class ProgramApplication {
 											System.out.println("-------------------------------------------------------------------------------");
 											continue;
 										}
-										System.out.println(code);
 
 										if(code.equals("NECN")) {
 											System.out.println("존재하지 않는 쿠폰 번호입니다.");
